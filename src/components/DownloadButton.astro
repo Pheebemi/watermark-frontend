@@ -1,0 +1,99 @@
+---
+---
+<div id="download-bar" style="display:none">
+  <div id="download-inner">
+    <span id="download-label">Select photos above to download</span>
+    <button id="btn-download" disabled>⬇ Download as ZIP</button>
+    <p id="download-error" style="display:none; color:#fca5a5; margin:0; font-size:0.85rem"></p>
+  </div>
+</div>
+
+<style is:global>
+  #download-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #1e293b;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    z-index: 100;
+    padding: 0.875rem 2rem;
+  }
+  #download-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  #download-label {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    flex: 1;
+  }
+  #btn-download {
+    padding: 0.65rem 1.75rem;
+    border-radius: 8px;
+    border: none;
+    background: #334155;
+    color: #94a3b8;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: not-allowed;
+    transition: background 0.2s, color 0.2s;
+    white-space: nowrap;
+  }
+  #btn-download.ready {
+    background: #2563eb;
+    color: #fff;
+    cursor: pointer;
+  }
+  #btn-download.ready:hover { background: #1d4ed8; }
+</style>
+
+<script>
+  import { downloadZip } from '../services/api';
+
+  const bar = document.getElementById('download-bar')!;
+  const btn = document.getElementById('btn-download') as HTMLButtonElement;
+  const label = document.getElementById('download-label')!;
+  const errorEl = document.getElementById('download-error')!;
+
+  let selectedIds: number[] = [];
+
+  window.addEventListener('watermark:uploaded', () => {
+    bar.style.display = 'block';
+    // add bottom padding to page so content isn't hidden behind the bar
+    document.body.style.paddingBottom = '70px';
+  });
+
+  window.addEventListener('watermark:selection', (e) => {
+    selectedIds = (e as CustomEvent<number[]>).detail;
+    const count = selectedIds.length;
+    btn.disabled = count === 0;
+    btn.className = count > 0 ? 'ready' : '';
+    btn.textContent = count > 0
+      ? `⬇ Download ${count} Photo${count !== 1 ? 's' : ''} as ZIP`
+      : '⬇ Download as ZIP';
+    label.textContent = count > 0
+      ? `${count} photo${count !== 1 ? 's' : ''} selected`
+      : 'Select photos above to download';
+  });
+
+  btn.addEventListener('click', async () => {
+    if (selectedIds.length === 0) return;
+    errorEl.style.display = 'none';
+    btn.textContent = 'Preparing zip…';
+    btn.disabled = true;
+
+    try {
+      await downloadZip(selectedIds);
+    } catch {
+      errorEl.textContent = 'Download failed. Please try again.';
+      errorEl.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.className = 'ready';
+      btn.textContent = `⬇ Download ${selectedIds.length} Photo${selectedIds.length !== 1 ? 's' : ''} as ZIP`;
+    }
+  });
+</script>

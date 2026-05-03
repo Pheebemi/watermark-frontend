@@ -1,0 +1,169 @@
+---
+---
+<section id="photo-grid-section" style="display:none; margin-bottom:2rem">
+  <div id="grid-toolbar" style="display:flex; gap:1rem; align-items:center; margin-bottom:1rem">
+    <span id="grid-count" style="font-weight:600; color:#1e293b"></span>
+    <button id="btn-select-all" class="toolbar-btn">Select All</button>
+    <span id="selected-count" style="color:#2563eb; font-size:0.875rem"></span>
+  </div>
+  <div id="photo-grid"></div>
+</section>
+
+<style is:global>
+  #photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 160px);
+    gap: 1rem;
+  }
+  .photo-card {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #e2e8f0;
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.15s;
+  }
+  .photo-card.selected { border-color: #2563eb; }
+  .photo-card img { width: 160px; height: 160px; display: block; object-fit: cover; }
+  .photo-card p {
+    margin: 0;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.75rem;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: #f8fafc;
+  }
+  .check-badge {
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 22px; height: 22px;
+    background: #2563eb;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 13px; font-weight: 700;
+  }
+  .download-btn {
+    position: absolute;
+    bottom: 30px; right: 6px;
+    width: 28px; height: 28px;
+    background: rgba(0,0,0,0.55);
+    border: none;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s;
+    font-size: 14px;
+    color: #fff;
+    z-index: 2;
+  }
+  .photo-card:hover .download-btn { opacity: 1; }
+  .download-btn:hover { background: rgba(37,99,235,0.85); }
+  .toolbar-btn {
+    padding: 0.4rem 1rem;
+    border-radius: 6px;
+    border: 1px solid #94a3b8;
+    background: #f1f5f9;
+    cursor: pointer;
+    font-size: 0.875rem;
+  }
+</style>
+
+<script>
+  interface Photo { id: number; original_name: string; watermarked_url: string; }
+
+  const section = document.getElementById('photo-grid-section')!;
+  const grid = document.getElementById('photo-grid')!;
+  const countEl = document.getElementById('grid-count')!;
+  const selectedCountEl = document.getElementById('selected-count')!;
+  const btnSelectAll = document.getElementById('btn-select-all')!;
+
+  let photos: Photo[] = [];
+  const selectedIds = new Set<number>();
+
+  window.addEventListener('watermark:uploaded', (e) => {
+    const newPhotos = (e as CustomEvent<Photo[]>).detail;
+    photos = [...photos, ...newPhotos];
+    newPhotos.forEach((p) => selectedIds.add(p.id));
+    render();
+    section.style.display = 'block';
+    emitSelection();
+  });
+
+  btnSelectAll.addEventListener('click', () => {
+    if (selectedIds.size === photos.length) {
+      selectedIds.clear();
+    } else {
+      photos.forEach((p) => selectedIds.add(p.id));
+    }
+    render();
+    emitSelection();
+  });
+
+  async function downloadSingle(photo: Photo) {
+    const res = await fetch(photo.watermarked_url);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = photo.original_name;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function render() {
+    const allSelected = photos.length > 0 && selectedIds.size === photos.length;
+    countEl.textContent = `${photos.length} photo${photos.length !== 1 ? 's' : ''} processed`;
+    btnSelectAll.textContent = allSelected ? 'Deselect All' : 'Select All';
+    selectedCountEl.textContent = selectedIds.size > 0 ? `${selectedIds.size} selected` : '';
+
+    grid.innerHTML = '';
+    photos.forEach((photo) => {
+      const card = document.createElement('div');
+      card.className = 'photo-card' + (selectedIds.has(photo.id) ? ' selected' : '');
+      card.dataset.id = String(photo.id);
+
+      if (selectedIds.has(photo.id)) {
+        const badge = document.createElement('div');
+        badge.className = 'check-badge';
+        badge.textContent = '✓';
+        card.appendChild(badge);
+      }
+
+      // Individual download button
+      const dlBtn = document.createElement('button');
+      dlBtn.className = 'download-btn';
+      dlBtn.title = 'Download this photo';
+      dlBtn.textContent = '⬇';
+      dlBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // don't toggle selection
+        downloadSingle(photo);
+      });
+      card.appendChild(dlBtn);
+
+      const img = document.createElement('img');
+      img.src = photo.watermarked_url;
+      img.alt = photo.original_name;
+
+      const name = document.createElement('p');
+      name.textContent = photo.original_name;
+
+      card.appendChild(img);
+      card.appendChild(name);
+      card.addEventListener('click', () => togglePhoto(photo.id));
+      grid.appendChild(card);
+    });
+  }
+
+  function togglePhoto(id: number) {
+    selectedIds.has(id) ? selectedIds.delete(id) : selectedIds.add(id);
+    render();
+    emitSelection();
+  }
+
+  function emitSelection() {
+    window.dispatchEvent(new CustomEvent('watermark:selection', { detail: Array.from(selectedIds) }));
+  }
+</script>

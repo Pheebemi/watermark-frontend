@@ -1,0 +1,114 @@
+---
+---
+<div id="upload-zone" class="upload-zone">
+  <input id="file-input" type="file" accept="image/*" multiple style="display:none" />
+  <p id="upload-label">Drag &amp; drop photos here, or click to select (max 30)</p>
+  <div id="progress-bar-wrap" style="display:none">
+    <div id="progress-bar"></div>
+  </div>
+  <p id="upload-error" class="error" style="display:none"></p>
+</div>
+
+<style>
+  .upload-zone {
+    border: 2px dashed #94a3b8;
+    border-radius: 12px;
+    padding: 3rem;
+    text-align: center;
+    cursor: pointer;
+    background: #f8fafc;
+    transition: all 0.2s;
+    margin-bottom: 2rem;
+  }
+  .upload-zone.drag-over {
+    border-color: #2563eb;
+    background: #eff6ff;
+  }
+  #upload-label { margin: 0; color: #475569; font-size: 1rem; }
+  #progress-bar-wrap {
+    margin-top: 1rem;
+    background: #e2e8f0;
+    border-radius: 4px;
+    height: 8px;
+  }
+  #progress-bar {
+    width: 0%;
+    background: #2563eb;
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.2s;
+  }
+  .error { color: #dc2626; margin-top: 0.5rem; }
+</style>
+
+<script>
+  import { uploadPhotos } from '../services/api';
+
+  const zone = document.getElementById('upload-zone')!;
+  const input = document.getElementById('file-input') as HTMLInputElement;
+  const label = document.getElementById('upload-label')!;
+  const progressWrap = document.getElementById('progress-bar-wrap')!;
+  const progressBar = document.getElementById('progress-bar')!;
+  const errorEl = document.getElementById('upload-error')!;
+
+  zone.addEventListener('click', () => input.click());
+
+  zone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    zone.classList.add('drag-over');
+  });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    handleFiles(e.dataTransfer?.files ?? null);
+  });
+
+  input.addEventListener('change', () => {
+    handleFiles(input.files);
+    input.value = '';
+  });
+
+  async function handleFiles(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    const fileArray = Array.from(files);
+    if (fileArray.length > 30) {
+      showError('Maximum 30 images per upload.');
+      return;
+    }
+    clearError();
+    setUploading(true);
+
+    try {
+      const result = await uploadPhotos(fileArray, (pct) => {
+        progressBar.style.width = `${pct}%`;
+        label.textContent = `Uploading… ${pct}%`;
+      });
+      if (result.data.errors.length > 0) {
+        showError(`${result.data.errors.length} file(s) failed to process.`);
+      }
+      window.dispatchEvent(new CustomEvent('watermark:uploaded', { detail: result.data.processed }));
+    } catch {
+      showError('Upload failed. Make sure the server is running.');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function setUploading(on: boolean) {
+    progressWrap.style.display = on ? 'block' : 'none';
+    if (!on) {
+      progressBar.style.width = '0%';
+      label.textContent = 'Drag & drop photos here, or click to select (max 30)';
+    }
+  }
+
+  function showError(msg: string) {
+    errorEl.textContent = msg;
+    errorEl.style.display = 'block';
+  }
+
+  function clearError() {
+    errorEl.style.display = 'none';
+  }
+</script>

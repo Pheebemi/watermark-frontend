@@ -1,0 +1,203 @@
+---
+interface Props {
+  title?: string;
+}
+const { title = 'ECWA 2 Jalingo — Watermark Adder' } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: 'Inter', system-ui, sans-serif;
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
+        min-height: 100vh;
+        color: #1e293b;
+      }
+
+      /* ── Top bar ── */
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.875rem 2rem;
+        background: rgba(255,255,255,0.05);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+      }
+      .topbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        text-decoration: none;
+      }
+      .topbar-icon {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #3b82f6, #06b6d4);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+      }
+      .topbar-name {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #f1f5f9;
+        letter-spacing: 0.01em;
+      }
+      .topbar-badge {
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: rgba(59,130,246,0.25);
+        color: #93c5fd;
+        border: 1px solid rgba(59,130,246,0.35);
+        border-radius: 99px;
+        padding: 0.15rem 0.6rem;
+      }
+
+      /* ── Hero ── */
+      .hero {
+        text-align: center;
+        padding: 3.5rem 1.5rem 2.5rem;
+      }
+      .hero-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(59,130,246,0.15);
+        border: 1px solid rgba(59,130,246,0.3);
+        border-radius: 99px;
+        padding: 0.35rem 1rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #93c5fd;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin-bottom: 1.25rem;
+      }
+      .hero-pill span { font-size: 0.9rem; }
+      .hero h1 {
+        margin: 0 0 0.75rem;
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 800;
+        line-height: 1.15;
+        color: #f8fafc;
+        letter-spacing: -0.02em;
+      }
+      .hero h1 em {
+        font-style: normal;
+        background: linear-gradient(90deg, #3b82f6, #06b6d4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .hero p {
+        margin: 0 auto;
+        max-width: 480px;
+        font-size: 1.05rem;
+        color: #94a3b8;
+        line-height: 1.6;
+      }
+
+      /* ── Steps strip ── */
+      .steps {
+        display: flex;
+        justify-content: center;
+        gap: 0;
+        flex-wrap: wrap;
+        padding: 0 1.5rem 2rem;
+      }
+      .step {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #64748b;
+        font-size: 0.82rem;
+        font-weight: 500;
+      }
+      .step-num {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: rgba(59,130,246,0.2);
+        color: #60a5fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .step-arrow {
+        color: #334155;
+        margin: 0 0.75rem;
+        font-size: 0.75rem;
+      }
+
+      /* ── Card wrapper ── */
+      .card {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.05);
+        padding: 2.5rem;
+        max-width: 960px;
+        margin: 0 auto 3rem;
+      }
+
+      /* ── Footer ── */
+      footer {
+        text-align: center;
+        padding: 1.5rem;
+        font-size: 0.8rem;
+        color: #475569;
+      }
+
+      @media (max-width: 600px) {
+        .topbar { padding: 0.75rem 1rem; }
+        .card { padding: 1.5rem; border-radius: 14px; margin: 0 1rem 2rem; }
+        .hero { padding: 2.5rem 1rem 1.5rem; }
+        .step-arrow { margin: 0 0.4rem; }
+      }
+    </style>
+  </head>
+  <body>
+
+    <nav class="topbar">
+      <div class="topbar-brand">
+        <div class="topbar-icon">✝</div>
+        <span class="topbar-name">ECWA 2 Jalingo</span>
+      </div>
+      <span class="topbar-badge">Photo Tool</span>
+    </nav>
+
+    <section class="hero">
+      <div class="hero-pill"><span>✦</span> Official Church Photo Tool</div>
+      <h1>Welcome to <em>ECWA 2 Jalingo</em><br/>Watermark Adder</h1>
+      <p>Upload your church photos and we'll stamp them with the official logo — ready to share in seconds.</p>
+    </section>
+
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div> Upload photos</div>
+      <div class="step-arrow">›</div>
+      <div class="step"><div class="step-num">2</div> Logo added automatically</div>
+      <div class="step-arrow">›</div>
+      <div class="step"><div class="step-num">3</div> Select &amp; download ZIP</div>
+    </div>
+
+    <div class="card">
+      <slot />
+    </div>
+
+    <footer>© {new Date().getFullYear()} ECWA 2 Jalingo &nbsp;·&nbsp; All rights reserved</footer>
+
+  </body>
+</html>
